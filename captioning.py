@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import base64
-import json
 import mimetypes
-import urllib.request
-import urllib.error
 from pathlib import Path
 
 import httpx
+from google import genai
+from google.genai import types
 from openai import OpenAI
 DEFAULT_PROMPT = (
     "A photorealistic portrait of a specific person, capturing their distinct facial "
@@ -57,66 +56,32 @@ def generate_gemini_caption(
     prompt: str,
     api_key: str,
     model: str = "gemini-3-flash-preview",
-    media_resolution: str = "medium",
+    temperature: float = 1.0,
 ) -> str:
     image_bytes = Path(image_path).read_bytes()
     mime_type = guess_mime_type(image_path)
-    encoded = base64.b64encode(image_bytes).decode("utf-8")
 
     print("=== Gemini Captioning ===")
-
     print(prompt)
-
-    print(api_key)
-
-    payload: dict = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "inline_data": {
-                            "mime_type": mime_type,
-                            "data": encoded,
-                        }
-                    },
-                    {"text": prompt},
-                ]
-            }
-        ],
-    }
-    if media_resolution:
-        resolution_map = {
-            "low": "MEDIA_RESOLUTION_LOW",
-            "medium": "MEDIA_RESOLUTION_MEDIUM",
-            "high": "MEDIA_RESOLUTION_HIGH",
-        }
-        normalized = resolution_map.get(media_resolution.lower(), media_resolution)
-        payload["generationConfig"] = {"mediaResolution": normalized}
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "x-goog-api-key": api_key,
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-
     try:
-        with urllib.request.urlopen(request) as response:
-            body = response.read()
-    except urllib.error.HTTPError as exc:
-        error_body = exc.read().decode("utf-8", errors="ignore")
-        raise RuntimeError(f"Gemini API HTTP {exc.code}: {error_body}") from exc
-    data = json.loads(body.decode("utf-8"))
-    text = (
-        data.get("candidates", [{}])[0]
-        .get("content", {})
-        .get("parts", [{}])[0]
-        .get("text")
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model=model,
+            contents=[
+                types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type=mime_type,
+                ),
+                prompt,
+            ],
+            config=types.GenerateContentConfig(
+            temperature=temperature
     )
+        )
+    except Exception as exc:
+        raise RuntimeError(f"Gemini API error: {exc}") from exc
+
+    text = getattr(response, "text", None)
     if not text:
         raise RuntimeError("Gemini response was empty.")
     return text.strip()

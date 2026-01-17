@@ -348,7 +348,9 @@ async def upload_images(request: Request, files: list[UploadFile] = File(...)) -
 
 @app.post("/process", response_class=HTMLResponse)
 async def process_images(request: Request) -> HTMLResponse:
-    if STATE["is_processing"]:
+    if STATE["is_processing"] and any(
+        image["status"] == "processing" for image in STATE["images"]
+    ):
         return templates.TemplateResponse(
             "partials/workspace.html",
             {
@@ -361,6 +363,8 @@ async def process_images(request: Request) -> HTMLResponse:
                 "logs": STATE["logs"],
             },
         )
+    if STATE["is_processing"]:
+        STATE["is_processing"] = False
 
     form = await request.form()
     if form:
@@ -410,6 +414,11 @@ async def process_images(request: Request) -> HTMLResponse:
             f"processing_delay={caption.get('processingDelay')!r} "
             f"topics={STATE['settings'].get('promptTopics')!r}"
         )
+
+    for image in STATE["images"]:
+        if image.get("status") == "processing":
+            image["status"] = "pending"
+            image["progress"] = 0
 
     if not STATE["images"]:
         log("No images to process.")
@@ -673,10 +682,16 @@ def process_tick(request: Request) -> HTMLResponse:
                         temperature=float(guidance_strength),
                     )
                 else:
+                    guidance_strength = (
+                        STATE.get("settings", {})
+                        .get("captionControl", {})
+                        .get("guidanceStrength", 1.0)
+                    )
                     raw_description = generate_gemini_caption(
                         image_path=image_path,
                         prompt=STATE["master_prompt"],
                         api_key=resolve_active_api_key(),
+                        temperature=float(guidance_strength),
                     )
                 print(f"[raw_caption] {raw_description}")
                 final_caption = build_final_caption(
