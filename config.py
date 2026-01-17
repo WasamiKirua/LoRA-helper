@@ -7,7 +7,6 @@ CONFIG = {
             "Flux",
             "Qwen-Image",
             "WAN-2.2",
-            "SD-1.5",
             "Chroma",
             "Z-Image",
             "Qwen-Image-Edit",
@@ -22,7 +21,6 @@ CONFIG = {
             "guidanceStrength": 0.7,
             "negativeHints": "blurry, low quality, watermark, signature, text",
             "captionLength": "medium",
-            "negativePreset": "auto",
             "strictFocus": False,
             "addQualityTags": True,
             "shuffleTopics": False,
@@ -99,25 +97,6 @@ CONFIG = {
                 }
             },
         },
-        "SD-1.5": {
-            "overrides": {
-                "captionControl": {
-                    "addQualityTags": False,
-                    "negativePreset": "custom_merge",
-                    "negativeHints": "extra fingers, deformed, ugly, bad anatomy",
-                }
-            },
-            "use_cases": {
-                "identity": {
-                    "captionControl": {
-                        "guidance": "portrait photo of a person, detailed face, clear features, (style)",
-                        "strictFocus": True,
-                        "captionLength": "short",
-                    },
-                    "promptTopics": ["detailed face", "sharp eyes", "soft lighting", "", "", ""],
-                }
-            },
-        },
         "Z-Image": {
             "overrides": {
                 "captionControl": {
@@ -163,7 +142,6 @@ TOOLTIPS = {
     "guidanceStrength": "Controls how strongly the AI adheres to your Caption Guidance. Higher values mean stricter adherence.",
     "negativeHints": "Tell the AI what to specifically AVOID describing in the captions (e.g., objects, colors, or styles).",
     "captionLength": "Sets the target length for the generated captions. 'Short' is often better for identity, 'Long' for style or cinematic LoRAs.",
-    "negativePreset": "Automatically adds common negative prompts depending on the base model to improve quality.",
     "strictFocus": "Forces the AI to only describe the main subject, ignoring background and other elements. Ideal for character LoRAs.",
     "addQualityTags": "Appends common quality-enhancing tags like 'best quality', 'high resolution' to your captions.",
     "shuffleTopics": "Randomizes the order of Prompt Topics for each image, which can help prevent the model from associating topics with each other.",

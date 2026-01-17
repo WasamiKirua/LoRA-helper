@@ -159,17 +159,6 @@
                             <option value="long" {% if settings.captionControl.captionLength == "long" %}selected{% endif %}>Long</option>
                         </select>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <label class="block text-sm font-medium text-text-secondary">Negative Preset</label>
-                            {{ tooltip('negativePreset') }}
-                        </div>
-                        <select name="negative_preset" class="form-select">
-                            <option value="auto" {% if settings.captionControl.negativePreset == "auto" %}selected{% endif %}>Auto</option>
-                            <option value="custom_merge" {% if settings.captionControl.negativePreset == "custom_merge" %}selected{% endif %}>Custom Merge</option>
-                            <option value="none" {% if settings.captionControl.negativePreset == "none" %}selected{% endif %}>None</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="space-y-2 text-sm">
                     <label class="flex items-center gap-3">

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import mimetypes
+import random
 from pathlib import Path
 
 import httpx
@@ -25,6 +27,10 @@ def build_ai_prompt(
         return DEFAULT_PROMPT
 
     prompt_parts = [caption_control.get("guidance") or DEFAULT_PROMPT]
+    if caption_control.get("strictFocus"):
+        prompt_parts.append(
+            "\nOnly describe the main subject. Ignore background, environment, props, and secondary elements."
+        )
     negative_hints = caption_control.get("negativeHints")
     if negative_hints:
         prompt_parts.append(f"\nAVOID describing elements like: {negative_hints}.")
@@ -155,16 +161,33 @@ def generate_grok_caption(
     raise RuntimeError("Grok response was empty.")
 
 
-def build_final_caption(raw_description: str, settings: dict, checkpoint: str) -> str:
+def _stable_shuffle(values: list[str], seed: str) -> list[str]:
+    if not values:
+        return []
+    seed_bytes = hashlib.sha256(seed.encode("utf-8")).digest()
+    rng = random.Random(int.from_bytes(seed_bytes[:8], "big"))
+    shuffled = list(values)
+    rng.shuffle(shuffled)
+    return shuffled
+
+
+def build_final_caption(
+    raw_description: str,
+    settings: dict,
+    checkpoint: str,
+    shuffle_seed: str | None = None,
+) -> str:
     lora = settings.get("lora", {}) if settings else {}
     caption_control = settings.get("captionControl", {}) if settings else {}
     prompt_topics = settings.get("promptTopics", []) if settings else []
     keyword = (lora.get("keyword") or "").strip()
     subject_token = (caption_control.get("subjectToken") or "").strip()
+    if caption_control.get("shuffleTopics") and shuffle_seed:
+        prompt_topics = _stable_shuffle(prompt_topics, shuffle_seed)
 
     model = checkpoint or lora.get("targetBaseModel") or "SDXL"
     cleaned_raw = (raw_description or "").strip()
-    is_sd = model in {"SDXL", "SD-1.5"}
+    is_sd = model == "SDXL"
     is_flux = model in {"Flux", "Chroma"}
     is_wan = model == "WAN-2.2"
     is_qwen = model in {"Qwen-Image", "Qwen-Image-Edit"}

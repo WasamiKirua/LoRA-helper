@@ -267,9 +267,6 @@ async def update_settings(request: Request) -> HTMLResponse:
         caption["captionLength"] = form.get(
             "caption_length", caption.get("captionLength", "medium")
         )
-        caption["negativePreset"] = form.get(
-            "negative_preset", caption.get("negativePreset", "auto")
-        )
         caption["strictFocus"] = "strict_focus" in form
         caption["addQualityTags"] = "add_quality_tags" in form
         caption["shuffleTopics"] = "shuffle_topics" in form
@@ -383,9 +380,6 @@ async def process_images(request: Request) -> HTMLResponse:
         caption["captionLength"] = form.get(
             "caption_length", caption.get("captionLength", "medium")
         )
-        caption["negativePreset"] = form.get(
-            "negative_preset", caption.get("negativePreset", "auto")
-        )
         caption["subjectToken"] = form.get("subject_token", caption.get("subjectToken", ""))
         caption["addQualityTags"] = "add_quality_tags" in form
         caption["shuffleTopics"] = "shuffle_topics" in form
@@ -407,7 +401,6 @@ async def process_images(request: Request) -> HTMLResponse:
             f"guidance_strength={caption.get('guidanceStrength')!r} "
             f"negative_hints={caption.get('negativeHints')!r} "
             f"caption_length={caption.get('captionLength')!r} "
-            f"negative_preset={caption.get('negativePreset')!r} "
             f"add_quality_tags={caption.get('addQualityTags')!r} "
             f"shuffle_topics={caption.get('shuffleTopics')!r} "
             f"strict_focus={caption.get('strictFocus')!r} "
@@ -698,6 +691,7 @@ def process_tick(request: Request) -> HTMLResponse:
                     raw_description,
                     STATE["settings"],
                     STATE["selected_checkpoint"],
+                    current_image.get("id"),
                 )
                 txt_prefix = STATE.get("file_prefix") or "image"
                 txt_name = f"{txt_prefix}_{current_image['index']:04d}.txt"
