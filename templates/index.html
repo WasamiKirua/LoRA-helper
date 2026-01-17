@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LORA Dataset Helper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --bg-color: #0d121c;
+            --panel-bg: rgba(23, 29, 42, 0.6);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #f0f4f8;
+            --text-secondary: #a6b3c6;
+            --accent-violet: #8b5cf6;
+            --accent-cyan: #22d3ee;
+            --input-bg: #0a0f19;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            font-feature-settings: "ss01" 1, "cv01" 1;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-y: scroll;
+        }
+
+        .animated-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(ellipse at 20% 10%, rgba(139, 92, 246, 0.15), transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(34, 211, 238, 0.15), transparent 50%),
+                        radial-gradient(ellipse at 50% 90%, rgba(139, 92, 246, 0.1), transparent 50%);
+            filter: blur(80px);
+            animation: pulseGlow 15s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes pulseGlow {
+            from { opacity: 0.8; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.05); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out both;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(12px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes floatIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .motion-card {
+            animation: popIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .motion-stagger > * {
+            animation: floatIn 360ms ease-out both;
+        }
+        .motion-stagger > *:nth-child(1) { animation-delay: 0ms; }
+        .motion-stagger > *:nth-child(2) { animation-delay: 40ms; }
+        .motion-stagger > *:nth-child(3) { animation-delay: 80ms; }
+        .motion-stagger > *:nth-child(4) { animation-delay: 120ms; }
+        .motion-stagger > *:nth-child(5) { animation-delay: 160ms; }
+        .motion-stagger > *:nth-child(6) { animation-delay: 200ms; }
+        .motion-stagger > *:nth-child(7) { animation-delay: 240ms; }
+        .motion-stagger > *:nth-child(8) { animation-delay: 280ms; }
+
+        .motion-button {
+            transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms ease, opacity 180ms ease;
+        }
+        .motion-button:hover {
+            transform: translateY(-1px) scale(1.01);
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.25);
+        }
+
+        .panel {
+            transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+        }
+        .panel:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .ui-tooltip {
+            position: fixed;
+            z-index: 60;
+            max-width: 16rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            line-height: 1.35;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 120ms ease, transform 120ms ease;
+            pointer-events: none;
+        }
+
+        .ui-tooltip.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.1); border-radius: 20px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.2); }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-violet);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23A6B3C6' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+        }
+
+        .form-checkbox {
+            appearance: none;
+            display: inline-block;
+            vertical-align: middle;
+            height: 1.125rem;
+            width: 1.125rem;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .form-checkbox:checked {
+            background-color: var(--accent-violet);
+            border-color: var(--accent-violet);
+        }
+
+        .form-checkbox:checked::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: translate(-50%, -60%) rotate(45deg);
+        }
+
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--input-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            border: 2px solid var(--bg-color);
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            cursor: pointer;
+            margin-top: -7px;
+            transition: background 0.2s;
+        }
+        input[type=range]:focus::-webkit-slider-thumb {
+            box-shadow: 0 0 0 3px var(--bg-color), 0 0 0 5px var(--accent-violet);
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--input-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+        input[type=range]::-moz-range-thumb {
+            border: 2px solid var(--bg-color);
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .text-text-primary { color: var(--text-primary); }
+        .text-text-secondary { color: var(--text-secondary); }
+        .text-accent-cyan { color: var(--accent-cyan); }
+        .text-accent-violet { color: var(--accent-violet); }
+        .border-border-color { border-color: var(--border-color); }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="animated-glow" aria-hidden="true"></div>
+
+    <header class="sticky top-0 z-20">
+        <div class="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <div class="relative flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-[color:var(--accent-violet)] to-[color:var(--accent-cyan)] ring-1 ring-white/20 grid place-items-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="opacity-95 text-white">
+                            <path d="M7 7h10v3H7zM7 11h10v3H7zM7 15h8v3H7z" fill="currentColor"></path>
+                        </svg>
+                    </div>
+                    <span class="font-black tracking-tight text-xl">
+                        <span class="opacity-90">LORA</span> <span class="text-violet-400">Helper</span>
+                    </span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-semibold text-text-secondary bg-white/5 border border-white/10 rounded-lg px-3 py-1">V 2.4</span>
+                    <a href="https://patreon.com/small0" target="_blank" rel="noreferrer" class="text-sm font-semibold text-accent-cyan hover:text-white transition-colors">
+                        patreon.com/small0
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 mx-auto max-w-[1920px] p-4 sm:p-6 lg:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-4 xl:col-span-3">
+                {% include "partials/settings_panel.html" %}
+            </div>
+            <div class="lg:col-span-8 xl:col-span-9 space-y-6">
+                {% include "partials/workspace.html" %}
+                {% include "partials/console.html" %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const bindDropZone = (root = document) => {
+            const dropZone = root.querySelector("#drop-zone");
+            if (!dropZone) return;
+            const fileInput = dropZone.querySelector("input[type='file']");
+            dropZone.addEventListener("dragover", event => {
+                event.preventDefault();
+                dropZone.classList.add("border-violet-500", "bg-violet-500/10", "scale-105");
+            });
+            dropZone.addEventListener("dragleave", event => {
+                event.preventDefault();
+                dropZone.classList.remove("border-violet-500", "bg-violet-500/10", "scale-105");
+            });
+            dropZone.addEventListener("drop", event => {
+                event.preventDefault();
+                dropZone.classList.remove("border-violet-500", "bg-violet-500/10", "scale-105");
+                const files = event.dataTransfer.files;
+                if (!files || files.length === 0 || !fileInput) return;
+                const dataTransfer = new DataTransfer();
+                for (const file of files) {
+                    dataTransfer.items.add(file);
+                }
+                fileInput.files = dataTransfer.files;
+                if (window.htmx) {
+                    htmx.trigger(fileInput, "change");
+                } else {
+                    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+            });
+        };
+
+        const SETTINGS_STORAGE_MAP = {
+            file_prefix: "LORA_FILE_PREFIX",
+            keyword: "LORA_KEYWORD",
+            training_goal: "LORA_TRAINING_GOAL",
+            target_base_model: "LORA_TARGET_BASE_MODEL",
+            caption_guidance: "CAPTION_GUIDANCE",
+            guidance_strength: "CAPTION_GUIDANCE_STRENGTH",
+            negative_hints: "CAPTION_NEGATIVE_HINTS",
+            caption_length: "CAPTION_LENGTH",
+            negative_preset: "CAPTION_NEGATIVE_PRESET",
+            strict_focus: "CAPTION_STRICT_FOCUS",
+            add_quality_tags: "CAPTION_ADD_QUALITY_TAGS",
+            shuffle_topics: "CAPTION_SHUFFLE_TOPICS",
+            subject_token: "CAPTION_SUBJECT_TOKEN",
+            processing_delay: "CAPTION_PROCESSING_DELAY",
+            topic_1: "PROMPT_TOPIC_1",
+            topic_2: "PROMPT_TOPIC_2",
+            topic_3: "PROMPT_TOPIC_3",
+            topic_4: "PROMPT_TOPIC_4",
+            topic_5: "PROMPT_TOPIC_5",
+            topic_6: "PROMPT_TOPIC_6",
+        };
+
+        const syncSettingsFromStorage = (form) => {
+            if (!form) return;
+            const backendField = form.querySelector("[name='backend']");
+            const geminiField = form.querySelector("[name='gemini_api_key']");
+            const grokField = form.querySelector("[name='grok_api_key']");
+            const grokModelField = form.querySelector("[name='grok_model']");
+            const allowNsfwField = form.querySelector("[name='allow_nsfw']");
+            const envPresent = form.dataset.envPresent === "true";
+            let changed = false;
+
+            if (envPresent) {
+                if (backendField) {
+                    localStorage.setItem("CAPTION_BACKEND", backendField.value);
+                }
+                if (geminiField) {
+                    localStorage.setItem("GEMINI_API_KEY", geminiField.value);
+                }
+                if (grokField) {
+                    localStorage.setItem("GROK_API_KEY", grokField.value);
+                }
+                if (grokModelField) {
+                    localStorage.setItem("GROK_MODEL", grokModelField.value);
+                }
+                if (allowNsfwField) {
+                    localStorage.setItem(
+                        "GROK_ALLOW_NSFW",
+                        allowNsfwField.checked ? "true" : "false"
+                    );
+                }
+                return;
+            }
+
+            Object.entries(SETTINGS_STORAGE_MAP).forEach(([name, storageKey]) => {
+                const field = form.querySelector(`[name='${name}']`);
+                if (!field) return;
+                const stored = localStorage.getItem(storageKey);
+                if (stored === null) return;
+                if (field instanceof HTMLInputElement && field.type === "checkbox") {
+                    const shouldCheck = stored === "true";
+                    if (field.checked !== shouldCheck) {
+                        field.checked = shouldCheck;
+                        changed = true;
+                    }
+                } else if (field.value !== stored) {
+                    field.value = stored;
+                    changed = true;
+                }
+            });
+
+            const backendStored = localStorage.getItem("CAPTION_BACKEND");
+            if (backendField && backendStored && backendField.value !== backendStored) {
+                backendField.value = backendStored;
+                changed = true;
+            }
+            const geminiStored = localStorage.getItem("GEMINI_API_KEY");
+            if (geminiField && geminiStored !== null && geminiField.value !== geminiStored) {
+                geminiField.value = geminiStored;
+                changed = true;
+            }
+            const grokStored = localStorage.getItem("GROK_API_KEY");
+            if (grokField && grokStored !== null && grokField.value !== grokStored) {
+                grokField.value = grokStored;
+                changed = true;
+            }
+            const modelStored = localStorage.getItem("GROK_MODEL");
+            if (grokModelField && modelStored && grokModelField.value !== modelStored) {
+                grokModelField.value = modelStored;
+                changed = true;
+            }
+            const nsfwStored = localStorage.getItem("GROK_ALLOW_NSFW");
+            if (allowNsfwField && nsfwStored !== null) {
+                const shouldCheck = nsfwStored === "true";
+                if (allowNsfwField.checked !== shouldCheck) {
+                    allowNsfwField.checked = shouldCheck;
+                    changed = true;
+                }
+            }
+
+            if (changed && window.htmx) {
+                htmx.trigger(form, "change");
+            }
+        };
+
+        const bindSettingsStorage = (root = document) => {
+            const form = root.querySelector("#settings-form");
+            if (!form) return;
+            syncSettingsFromStorage(form);
+            form.addEventListener("input", event => {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) return;
+                const name = target.getAttribute("name");
+                if (!name) return;
+                if (name === "backend") {
+                    localStorage.setItem("CAPTION_BACKEND", target.value);
+                } else if (name === "gemini_api_key") {
+                    localStorage.setItem("GEMINI_API_KEY", target.value);
+                } else if (name === "grok_api_key") {
+                    localStorage.setItem("GROK_API_KEY", target.value);
+                } else if (name === "grok_model") {
+                    localStorage.setItem("GROK_MODEL", target.value);
+                } else if (name === "allow_nsfw") {
+                    localStorage.setItem("GROK_ALLOW_NSFW", target.checked ? "true" : "false");
+                } else if (Object.prototype.hasOwnProperty.call(SETTINGS_STORAGE_MAP, name)) {
+                    const storageKey = SETTINGS_STORAGE_MAP[name];
+                    if (target instanceof HTMLInputElement && target.type === "checkbox") {
+                        localStorage.setItem(storageKey, target.checked ? "true" : "false");
+                    } else {
+                        localStorage.setItem(storageKey, target.value);
+                    }
+                }
+            });
+        };
+
+        let tooltipEl = null;
+        const ensureTooltip = () => {
+            if (!tooltipEl) {
+                tooltipEl = document.createElement("div");
+                tooltipEl.className = "ui-tooltip";
+                document.body.appendChild(tooltipEl);
+            }
+            return tooltipEl;
+        };
+
+        const positionTooltip = (event) => {
+            const tooltip = ensureTooltip();
+            const padding = 12;
+            const offsetX = 14;
+            const offsetY = 12;
+            const maxWidth = 260;
+            tooltip.style.maxWidth = `${maxWidth}px`;
+            let left = event.clientX + offsetX;
+            let top = event.clientY + offsetY;
+            const { innerWidth, innerHeight } = window;
+            if (left + maxWidth + padding > innerWidth) {
+                left = innerWidth - maxWidth - padding;
+            }
+            const height = tooltip.offsetHeight || 60;
+            if (top + height + padding > innerHeight) {
+                top = innerHeight - height - padding;
+            }
+            tooltip.style.left = `${Math.max(padding, left)}px`;
+            tooltip.style.top = `${Math.max(padding, top)}px`;
+        };
+
+        const bindTooltips = (root = document) => {
+            root.querySelectorAll(".tooltip-trigger").forEach(trigger => {
+                if (trigger.dataset.tooltipBound) return;
+                trigger.dataset.tooltipBound = "true";
+                trigger.addEventListener("mouseenter", event => {
+                    const tooltip = ensureTooltip();
+                    tooltip.textContent = trigger.dataset.tooltip || "";
+                    tooltip.classList.add("is-visible");
+                    positionTooltip(event);
+                });
+                trigger.addEventListener("mousemove", positionTooltip);
+                trigger.addEventListener("mouseleave", () => {
+                    if (tooltipEl) {
+                        tooltipEl.classList.remove("is-visible");
+                    }
+                });
+            });
+        };
+
+        const scrollConsole = () => {
+            const end = document.querySelector("#console-end");
+            if (end) {
+                end.scrollIntoView({ behavior: "smooth" });
+            }
+        };
+
+        let settingsScrollTop = 0;
+        document.body.addEventListener("htmx:beforeSwap", event => {
+            if (event.detail.target && event.detail.target.id === "settings-panel") {
+                const form = document.querySelector("#settings-form");
+                if (form) {
+                    settingsScrollTop = form.scrollTop;
+                }
+            }
+        });
+        document.body.addEventListener("htmx:afterSwap", event => {
+            if (event.detail.target && event.detail.target.id === "settings-panel") {
+                const form = document.querySelector("#settings-form");
+                if (form) {
+                    form.scrollTop = settingsScrollTop;
+                }
+            }
+            const consoles = document.querySelectorAll("#console");
+            if (consoles.length > 1) {
+                consoles.forEach((node, index) => {
+                    if (index > 0) {
+                        node.remove();
+                    }
+                });
+            }
+        });
+
+        window.handleSelectKey = () => {
+            if (window.aistudio && typeof window.aistudio.openSelectKey === "function") {
+                window.aistudio.openSelectKey();
+            } else {
+                alert("This feature requires a supported environment to select an API key automatically.");
+            }
+        };
+
+        bindDropZone();
+        bindSettingsStorage();
+        bindTooltips();
+        scrollConsole();
+        if (window.htmx) {
+            htmx.onLoad(content => {
+                bindDropZone(content);
+                bindSettingsStorage(content);
+                bindTooltips(content);
+                scrollConsole();
+            });
+        }
+    </script>
+</body>
+</html>

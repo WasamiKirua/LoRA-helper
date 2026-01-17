@@ -1,0 +1,13 @@
+<div id="console" class="panel p-6 motion-card" {% if include_console %}hx-swap-oob="true"{% endif %}>
+    <h2 class="text-xl font-bold mb-4">Console</h2>
+    <div class="bg-black/20 rounded-lg p-4 font-mono text-xs text-text-secondary h-64 overflow-y-auto">
+        {% if logs | length == 0 %}
+            <p class="animate-fade-in">[--:--:--] Console ready.</p>
+        {% else %}
+            {% for entry in logs %}
+                <p class="whitespace-pre-wrap animate-fade-in {% if 'error' in entry | lower %}text-red-400{% endif %}">{{ entry }}</p>
+            {% endfor %}
+        {% endif %}
+        <div id="console-end"></div>
+    </div>
+</div>

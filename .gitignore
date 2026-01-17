@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# VENV
+.env
+
+# Dataset Related
+*.txt
+*.jpg
+*.jpeg
+*.png
+
+LORATOOL-2.5
+metadata.json

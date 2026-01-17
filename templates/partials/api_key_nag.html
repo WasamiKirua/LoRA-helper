@@ -1,0 +1,63 @@
+<div id="api-key-nag" {% if oob %}hx-swap-oob="true"{% endif %}>
+    {% if api_key_missing %}
+        {% if backend == "gemini" %}
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" aria-modal="true" role="dialog">
+                <div class="w-full max-w-md rounded-2xl p-8 space-y-4 text-center text-text-secondary bg-[#11222b] shadow-2xl shadow-black/50">
+                    <h2 class="text-xl font-bold text-text-primary">API Key Required for Gemini</h2>
+                    <p class="text-sm">To generate captions, this application requires access to the Gemini API.</p>
+                    <div class="text-left text-sm text-text-secondary space-y-3 p-4 rounded-lg bg-black/20 border border-white/10">
+                        <p>Please use the button below to select your Google Cloud project and enable the Gemini API.</p>
+                    </div>
+                    <p class="text-xs !mt-6">
+                        Standard API usage fees apply. For more information, see the
+                        <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" class="font-semibold text-accent-cyan hover:underline">
+                            billing documentation
+                        </a>.
+                    </p>
+                    <button
+                        type="button"
+                        onclick="handleSelectKey()"
+                        class="w-full mt-2 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-accent-cyan to-accent-violet px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-violet-500/25 hover:opacity-90">
+                        Select Project
+                    </button>
+                </div>
+            </div>
+        {% elif backend == "grok" %}
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" aria-modal="true" role="dialog">
+                <div class="w-full max-w-md rounded-2xl p-8 space-y-5 bg-gradient-to-b from-[#182a34] to-[#111e28] shadow-2xl shadow-black/50 text-center">
+                    <h2 class="text-xl font-bold text-text-primary">API Key Required for Grok</h2>
+                    <p class="text-sm text-text-secondary">
+                        Add your xAI API key in the <strong class="font-semibold text-text-primary">Captioning Backend</strong> section to enable Grok (NSFW-friendly) captioning.
+                    </p>
+                    <p class="text-xs text-text-secondary">
+                        Keys are stored locally in your browser only and sent directly to api.x.ai for caption generation.
+                    </p>
+                </div>
+            </div>
+        {% else %}
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" aria-modal="true" role="dialog">
+                <div class="w-full max-w-md rounded-2xl p-8 space-y-5 bg-gradient-to-b from-[#182a34] to-[#111e28] shadow-2xl shadow-black/50">
+                    <h2 class="text-xl font-bold text-center text-text-primary">API Key Required for Gemini</h2>
+                    <p class="text-sm text-center text-text-secondary">
+                        To generate captions, this application requires access to the Gemini API.
+                    </p>
+                    <div class="text-sm space-y-3 p-4 rounded-lg border border-white/10 text-text-secondary">
+                        <p>
+                            Please enter your Gemini API key in the <strong class="font-semibold text-text-primary">"Captioning Backend"</strong> section of the Configuration panel.
+                        </p>
+                        <hr class="border-white/10 my-3" />
+                        <p class="text-xs">
+                            Your key is saved securely in your browser's local storage and is not transmitted anywhere except to Gemini's servers.
+                        </p>
+                    </div>
+                    <p class="text-xs text-center !mt-6 text-text-secondary">
+                        Standard API usage fees apply. For more information, see the
+                        <a href="https://ai.google.dev/pricing" target="_blank" rel="noopener noreferrer" class="font-semibold text-accent-cyan hover:underline">
+                            billing documentation
+                        </a>.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>

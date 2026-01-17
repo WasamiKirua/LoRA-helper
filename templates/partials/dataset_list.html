@@ -1,0 +1,21 @@
+{% set active_id = selected_id if selected_id is defined else (selected.id if selected is defined else 0) %}
+<div id="dataset-list" class="space-y-3">
+    {% for item in items %}
+        {% set is_active = item.id == active_id %}
+        <button
+            class="w-full text-left rounded-2xl border px-4 py-3 transition {{ 'border-[color:var(--accent)] bg-[color:var(--glow)]' if is_active else 'border-black/10 bg-white/70 hover:bg-white' }}"
+            hx-get="/fragments/item/{{ item.id }}"
+            hx-target="#item-panel"
+            hx-swap="innerHTML">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-semibold">{{ item.name }}</div>
+                    <div class="text-xs text-[color:var(--muted)]">{{ item.status | replace('_', ' ') | title }}</div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded-full {{ 'bg-orange-100 text-orange-700' if item.status == 'review' else '' }} {{ 'bg-emerald-100 text-emerald-700' if item.status == 'labeled' else '' }} {{ 'bg-gray-100 text-gray-600' if item.status == 'unlabeled' else '' }}">
+                    {{ item.status }}
+                </span>
+            </div>
+        </button>
+    {% endfor %}
+</div>

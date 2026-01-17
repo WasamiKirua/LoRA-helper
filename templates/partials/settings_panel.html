@@ -1,0 +1,228 @@
+{% macro tooltip(key) %}
+    {% if tooltips and tooltips.get(key) %}
+        <span class="tooltip-trigger" data-tooltip="{{ tooltips.get(key) }}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </span>
+    {% endif %}
+{% endmacro %}
+
+<div id="settings-panel" class="panel p-6 h-full motion-card">
+    <h2 class="text-xl font-bold mb-6">Configuration</h2>
+    <form
+        id="settings-form"
+        hx-post="/settings"
+        hx-trigger="change delay:200ms, keyup changed delay:1000ms"
+        hx-target="#settings-panel"
+        hx-swap="outerHTML"
+        data-env-present="{{ 'true' if env_present else 'false' }}"
+        class="space-y-8 max-h-[calc(100vh-10rem)] overflow-y-auto pr-2 -mr-2">
+
+        <details class="space-y-4" open>
+            <summary class="cursor-pointer text-sm font-bold uppercase tracking-wider text-cyan-400 list-none flex items-center gap-2">
+                Captioning Backend
+            </summary>
+            <div class="pt-4 space-y-4 border-t border-white/10">
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Service</label>
+                        {{ tooltip('backend') }}
+                    </div>
+                    <select name="backend" class="form-select">
+                        <option value="gemini" {% if backend == "gemini" %}selected{% endif %}>Gemini</option>
+                        <option value="grok" {% if backend == "grok" %}selected{% endif %}>Grok (xAI, NSFW-friendly)</option>
+                    </select>
+                </div>
+                {% if backend == "gemini" %}
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="block text-sm font-medium text-text-secondary">Gemini API Key</label>
+                            {{ tooltip('backendKey') }}
+                        </div>
+                        <input type="password" name="gemini_api_key" class="form-input" placeholder="Paste your Gemini API key" value="{{ gemini_api_key }}">
+                    </div>
+                {% else %}
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="block text-sm font-medium text-text-secondary">Grok API Key</label>
+                            {{ tooltip('backendKey') }}
+                        </div>
+                        <input type="password" name="grok_api_key" class="form-input" placeholder="xai-..." value="{{ grok_api_key }}">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="block text-sm font-medium text-text-secondary">Grok Vision Model</label>
+                            {{ tooltip('grokModel') }}
+                        </div>
+                        <input type="text" name="grok_model" class="form-input" placeholder="grok-2-vision-latest" value="{{ grok_model }}">
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" name="allow_nsfw" class="form-checkbox" {% if allow_nsfw %}checked{% endif %}>
+                            <span class="flex items-center gap-2">Allow NSFW image captions {{ tooltip('allowNsfw') }}</span>
+                        </label>
+                        <p class="text-xs text-text-secondary pl-8">Grok will describe explicit content without censoring when enabled.</p>
+                    </div>
+                {% endif %}
+                <div class="space-y-2 text-sm">
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" name="simulate_failures" class="form-checkbox" {% if simulate_failures %}checked{% endif %}>
+                        <span>Simulate caption failures</span>
+                    </label>
+                    <p class="text-xs text-text-secondary pl-8">Use this to test error and retry states without real API calls.</p>
+                </div>
+            </div>
+        </details>
+
+        <details class="space-y-4" open>
+            <summary class="cursor-pointer text-sm font-bold uppercase tracking-wider text-cyan-400 list-none flex items-center gap-2">
+                LORA Settings
+            </summary>
+            <div class="pt-4 space-y-4 border-t border-white/10">
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Training Goal</label>
+                        {{ tooltip('trainingGoal') }}
+                    </div>
+                    <select name="training_goal" class="form-select">
+                        {% for use_case in use_case_order %}
+                            <option value="{{ use_case }}" {% if use_case == selected_use_case %}selected{% endif %}>{{ use_case | capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="block text-sm font-medium text-text-secondary">File prefix</label>
+                            {{ tooltip('filePrefix') }}
+                        </div>
+                        <input type="text" name="file_prefix" class="form-input" value="{{ settings.lora.filePrefix }}">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="block text-sm font-medium text-text-secondary">Keyword</label>
+                            {{ tooltip('keyword') }}
+                        </div>
+                        <input type="text" name="keyword" class="form-input" value="{{ settings.lora.keyword }}">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Target Base Model</label>
+                        {{ tooltip('targetBaseModel') }}
+                    </div>
+                    <select name="target_base_model" class="form-select">
+                        {% for checkpoint in checkpoint_order %}
+                            <option value="{{ checkpoint }}" {% if checkpoint == selected_checkpoint %}selected{% endif %}>{{ checkpoint }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </details>
+
+        <details class="space-y-4" open>
+            <summary class="cursor-pointer text-sm font-bold uppercase tracking-wider text-cyan-400 list-none flex items-center gap-2">
+                Caption Control
+            </summary>
+            <div class="pt-4 space-y-4 border-t border-white/10">
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Caption Guidance</label>
+                        {{ tooltip('captionGuidance') }}
+                    </div>
+                    <textarea name="caption_guidance" rows="4" class="form-textarea">{{ settings.captionControl.guidance }}</textarea>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Guidance Strength: {{ settings.captionControl.guidanceStrength }}</label>
+                        {{ tooltip('guidanceStrength') }}
+                    </div>
+                    <input type="range" min="0" max="1" step="0.1" name="guidance_strength" value="{{ settings.captionControl.guidanceStrength }}">
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Negative Hints</label>
+                        {{ tooltip('negativeHints') }}
+                    </div>
+                    <input type="text" name="negative_hints" class="form-input" value="{{ settings.captionControl.negativeHints }}">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="block text-sm font-medium text-text-secondary">Caption Length</label>
+                            {{ tooltip('captionLength') }}
+                        </div>
+                        <select name="caption_length" class="form-select">
+                            <option value="short" {% if settings.captionControl.captionLength == "short" %}selected{% endif %}>Short</option>
+                            <option value="medium" {% if settings.captionControl.captionLength == "medium" %}selected{% endif %}>Medium</option>
+                            <option value="long" {% if settings.captionControl.captionLength == "long" %}selected{% endif %}>Long</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <label class="block text-sm font-medium text-text-secondary">Negative Preset</label>
+                            {{ tooltip('negativePreset') }}
+                        </div>
+                        <select name="negative_preset" class="form-select">
+                            <option value="auto" {% if settings.captionControl.negativePreset == "auto" %}selected{% endif %}>Auto</option>
+                            <option value="custom_merge" {% if settings.captionControl.negativePreset == "custom_merge" %}selected{% endif %}>Custom Merge</option>
+                            <option value="none" {% if settings.captionControl.negativePreset == "none" %}selected{% endif %}>None</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" name="strict_focus" class="form-checkbox" {% if settings.captionControl.strictFocus %}checked{% endif %}>
+                        <span class="flex items-center gap-2">Strict focus (subject-only) {{ tooltip('strictFocus') }}</span>
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" name="add_quality_tags" class="form-checkbox" {% if settings.captionControl.addQualityTags %}checked{% endif %}>
+                        <span class="flex items-center gap-2">Add quality tags {{ tooltip('addQualityTags') }}</span>
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" name="shuffle_topics" class="form-checkbox" {% if settings.captionControl.shuffleTopics %}checked{% endif %}>
+                        <span class="flex items-center gap-2">Shuffle topics per image {{ tooltip('shuffleTopics') }}</span>
+                    </label>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Subject Token</label>
+                        {{ tooltip('subjectToken') }}
+                    </div>
+                    <input type="text" name="subject_token" class="form-input" value="{{ settings.captionControl.subjectToken }}">
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <label class="block text-sm font-medium text-text-secondary">Processing Delay (seconds)</label>
+                        {{ tooltip('processingDelay') }}
+                    </div>
+                    <input type="number" min="0" step="0.1" name="processing_delay" class="form-input" value="{{ settings.captionControl.processingDelay }}">
+                </div>
+            </div>
+        </details>
+
+        <details class="space-y-4" open>
+            <summary class="cursor-pointer text-sm font-bold uppercase tracking-wider text-cyan-400 list-none flex items-center gap-2">
+                Prompt Topics
+            </summary>
+            <div class="pt-4 space-y-4 border-t border-white/10">
+                <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium text-text-secondary">Topics to reinforce in every caption</p>
+                    {{ tooltip('promptTopics') }}
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    {% for topic in settings.promptTopics %}
+                        <div>
+                            <input type="text" name="topic_{{ loop.index }}" class="form-input" placeholder="Topic {{ loop.index }}" value="{{ topic }}">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </details>
+    </form>
+</div>
+
+{% if include_console %}
+    {% include "partials/console.html" with context %}
+{% endif %}
