@@ -128,6 +128,7 @@ def generate_grok_caption(
     api_key: str,
     model: str = "grok-2-vision-latest",
     detail: str = "high",
+    temperature: float = 1.0,
 ) -> str:
     image_bytes = Path(image_path).read_bytes()
     mime_type = guess_mime_type(image_path)
@@ -157,7 +158,12 @@ def generate_grok_caption(
                 ],
             }
         ]
-        response = client.responses.create(model=model, input=messages, store=False)
+        response = client.responses.create(
+            model=model,
+            input=messages,
+            temperature=temperature,
+            store=False,
+        )
     except Exception as exc:
         error_body = ""
         status_code = getattr(getattr(exc, "response", None), "status_code", None)

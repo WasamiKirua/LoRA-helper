@@ -660,11 +660,17 @@ def process_tick(request: Request) -> HTMLResponse:
             try:
                 image_path = str(UPLOAD_DIR / current_image["stored_name"])
                 if STATE["backend"] == "grok":
+                    guidance_strength = (
+                        STATE.get("settings", {})
+                        .get("captionControl", {})
+                        .get("guidanceStrength", 1.0)
+                    )
                     raw_description = generate_grok_caption(
                         image_path=image_path,
                         prompt=STATE["master_prompt"],
                         api_key=resolve_active_api_key(),
                         model=STATE["grok_model"],
+                        temperature=float(guidance_strength),
                     )
                 else:
                     raw_description = generate_gemini_caption(
