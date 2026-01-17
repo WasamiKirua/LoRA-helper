@@ -16,7 +16,4 @@ wheels/
 *.txt
 *.jpg
 *.jpeg
-*.png
-
-LORATOOL-2.5
 metadata.json

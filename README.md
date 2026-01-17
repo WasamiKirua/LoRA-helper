@@ -1,3 +1,5 @@
+![LoRA Helper landing page](landingpage.png)
+
 # LoRA Helper
 
 LoRA Helper is a local web app for generating consistent training captions for LoRA datasets. It lets you upload a batch of images, choose a target base model and training goal, tune caption controls, and download a ZIP with images + paired `.txt` captions formatted for LoRA training.
