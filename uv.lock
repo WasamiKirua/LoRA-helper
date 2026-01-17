@@ -343,7 +343,7 @@ wheels = [
 ]
 
 [[package]]
-name = "loratool-1-0"
+name = "lora-helper"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
