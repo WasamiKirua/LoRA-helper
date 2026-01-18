@@ -428,10 +428,68 @@
             }
         };
 
+        const syncSettingsToStorage = (form) => {
+            if (!form) return;
+            const backendField = form.querySelector("[name='backend']");
+            const geminiField = form.querySelector("[name='gemini_api_key']");
+            const grokField = form.querySelector("[name='grok_api_key']");
+            const grokModelField = form.querySelector("[name='grok_model']");
+            const allowNsfwField = form.querySelector("[name='allow_nsfw']");
+            const envPresent = form.dataset.envPresent === "true";
+
+            if (backendField) {
+                localStorage.setItem("CAPTION_BACKEND", backendField.value);
+            }
+            if (geminiField) {
+                localStorage.setItem("GEMINI_API_KEY", geminiField.value);
+            }
+            if (grokField) {
+                localStorage.setItem("GROK_API_KEY", grokField.value);
+            }
+            if (grokModelField) {
+                localStorage.setItem("GROK_MODEL", grokModelField.value);
+            }
+            if (allowNsfwField) {
+                localStorage.setItem(
+                    "GROK_ALLOW_NSFW",
+                    allowNsfwField.checked ? "true" : "false"
+                );
+            }
+            if (envPresent) {
+                return;
+            }
+
+            Object.entries(SETTINGS_STORAGE_MAP).forEach(([name, storageKey]) => {
+                const field = form.querySelector(`[name='${name}']`);
+                if (!field) return;
+                if (field instanceof HTMLInputElement && field.type === "checkbox") {
+                    localStorage.setItem(storageKey, field.checked ? "true" : "false");
+                } else {
+                    localStorage.setItem(storageKey, field.value);
+                }
+            });
+        };
+
         const bindSettingsStorage = (root = document) => {
             const form = root.querySelector("#settings-form");
             if (!form) return;
-            syncSettingsFromStorage(form);
+            if (form.dataset.syncMode === "server") {
+                syncSettingsToStorage(form);
+                form.dataset.syncMode = "storage";
+            } else {
+                syncSettingsFromStorage(form);
+            }
+            const guidanceInput = form.querySelector("[name='guidance_strength']");
+            const guidanceDisplay = form.querySelector("[data-guidance-strength]");
+            if (guidanceInput && guidanceDisplay) {
+                guidanceDisplay.textContent = guidanceInput.value;
+                guidanceInput.addEventListener("input", event => {
+                    const target = event.target;
+                    if (target instanceof HTMLInputElement) {
+                        guidanceDisplay.textContent = target.value;
+                    }
+                });
+            }
             form.addEventListener("input", event => {
                 const target = event.target;
                 if (!(target instanceof HTMLElement)) return;

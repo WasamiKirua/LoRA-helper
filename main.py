@@ -9,7 +9,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, File, Request, UploadFile
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -200,6 +200,7 @@ def index(request: Request) -> HTMLResponse:
             "all_done": all_done(STATE["images"]),
             "can_process": can_process(STATE["images"]),
             "is_processing": STATE["is_processing"],
+            "settings_sync_mode": "storage",
         },
     )
 
@@ -279,6 +280,8 @@ async def update_settings(request: Request) -> HTMLResponse:
             topics.append(form.get(f"topic_{i + 1}", ""))
         STATE["settings"]["promptTopics"] = topics
         log("Configuration updated.")
+    if request.headers.get("X-Settings-Silent") == "true":
+        return Response(status_code=204)
     return templates.TemplateResponse(
         "partials/settings_panel.html",
         {
@@ -299,6 +302,7 @@ async def update_settings(request: Request) -> HTMLResponse:
             "use_case_order": CONFIG["ui_hints"]["use_case_order"],
             "include_console": True,
             "logs": STATE["logs"],
+            "settings_sync_mode": "server",
         },
     )
 

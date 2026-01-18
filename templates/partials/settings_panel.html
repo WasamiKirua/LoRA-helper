@@ -13,10 +13,11 @@
     <form
         id="settings-form"
         hx-post="/settings"
-        hx-trigger="change delay:200ms, keyup changed delay:1000ms"
-        hx-target="#settings-panel"
-        hx-swap="outerHTML"
+        hx-trigger="change delay:200ms from:input, change delay:200ms from:textarea, change delay:200ms from:select:not(.refresh-panel), keyup changed delay:1000ms from:input[type='text'], keyup changed delay:1000ms from:textarea"
+        hx-headers='{"X-Settings-Silent":"true"}'
+        hx-swap="none"
         data-env-present="{{ 'true' if env_present else 'false' }}"
+        data-sync-mode="{{ settings_sync_mode | default('storage') }}"
         class="space-y-8 max-h-[calc(100vh-10rem)] overflow-y-auto pr-2 -mr-2">
 
         <details class="space-y-4" open>
@@ -29,7 +30,16 @@
                         <label class="block text-sm font-medium text-text-secondary">Service</label>
                         {{ tooltip('backend') }}
                     </div>
-                    <select name="backend" class="form-select">
+                    <select
+                        name="backend"
+                        class="form-select refresh-panel"
+                        hx-post="/settings"
+                        hx-trigger="change"
+                        hx-include="#settings-form"
+                        hx-target="#settings-panel"
+                        hx-swap="outerHTML"
+                        hx-headers='{"X-Settings-Silent":"false"}'
+                        hx-disinherit="hx-headers">
                         <option value="gemini" {% if backend == "gemini" %}selected{% endif %}>Gemini</option>
                         <option value="grok" {% if backend == "grok" %}selected{% endif %}>Grok (xAI, NSFW-friendly)</option>
                     </select>
@@ -85,7 +95,16 @@
                         <label class="block text-sm font-medium text-text-secondary">Training Goal</label>
                         {{ tooltip('trainingGoal') }}
                     </div>
-                    <select name="training_goal" class="form-select">
+                    <select
+                        name="training_goal"
+                        class="form-select refresh-panel"
+                        hx-post="/settings"
+                        hx-trigger="change"
+                        hx-include="#settings-form"
+                        hx-target="#settings-panel"
+                        hx-swap="outerHTML"
+                        hx-headers='{"X-Settings-Silent":"false"}'
+                        hx-disinherit="hx-headers">
                         {% for use_case in use_case_order %}
                             <option value="{{ use_case }}" {% if use_case == selected_use_case %}selected{% endif %}>{{ use_case | capitalize }}</option>
                         {% endfor %}
@@ -112,7 +131,16 @@
                         <label class="block text-sm font-medium text-text-secondary">Target Base Model</label>
                         {{ tooltip('targetBaseModel') }}
                     </div>
-                    <select name="target_base_model" class="form-select">
+                    <select
+                        name="target_base_model"
+                        class="form-select refresh-panel"
+                        hx-post="/settings"
+                        hx-trigger="change"
+                        hx-include="#settings-form"
+                        hx-target="#settings-panel"
+                        hx-swap="outerHTML"
+                        hx-headers='{"X-Settings-Silent":"false"}'
+                        hx-disinherit="hx-headers">
                         {% for checkpoint in checkpoint_order %}
                             <option value="{{ checkpoint }}" {% if checkpoint == selected_checkpoint %}selected{% endif %}>{{ checkpoint }}</option>
                         {% endfor %}
@@ -135,7 +163,7 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2 mb-1.5">
-                        <label class="block text-sm font-medium text-text-secondary">Guidance Strength: {{ settings.captionControl.guidanceStrength }}</label>
+                        <label class="block text-sm font-medium text-text-secondary">Guidance Strength: <span data-guidance-strength>{{ settings.captionControl.guidanceStrength }}</span></label>
                         {{ tooltip('guidanceStrength') }}
                     </div>
                     <input type="range" min="0" max="1" step="0.1" name="guidance_strength" value="{{ settings.captionControl.guidanceStrength }}">
